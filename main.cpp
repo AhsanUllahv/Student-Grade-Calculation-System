@@ -1,9 +1,11 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <numeric>
 #include <iomanip>
+#include <sstream>
 
 class Person {
 private:
@@ -38,21 +40,10 @@ public:
     // Destructor
     ~Person() {}
 
-    // Data Input Method
-    friend std::istream& operator>>(std::istream& is, Person& person) {
-        int hwCount;
-        std::cout << "Enter the number of homework assignments: ";
-        is >> hwCount;
-        person.homeworkResults.resize(hwCount);
-
-        for (int i = 0; i < hwCount; ++i) {
-            std::cout << "Homework " << (i + 1) << ": ";
-            is >> person.homeworkResults[i];
-        }
-
-        std::cout << "Enter exam result: ";
-        is >> person.examResult;
-        return is;
+    // Method to set homework results and exam score
+    void setScores(const std::vector<double>& hwResults, double exam) {
+        homeworkResults = hwResults;
+        examResult = exam;
     }
 
     // Data Output Method
@@ -82,21 +73,48 @@ public:
 };
 
 int main() {
-    int personCount;
-    std::cout << "Enter the number of persons: ";
-    std::cin >> personCount;
+    std::string filename;
+    std::cout << "Enter the filename: ";
+    std::cin >> filename;
+
+    std::ifstream infile(filename);
+    if (!infile) {
+        std::cerr << "Unable to open file " << filename << std::endl;
+        return 1; // Exit if the file could not be opened
+    }
 
     std::vector<Person> persons;
-    for (int i = 0; i < personCount; ++i) {
+    std::string line;
+
+    // Skip the header line
+    std::getline(infile, line);
+
+    while (std::getline(infile, line)) {
+        std::istringstream iss(line);
         std::string firstName, surname;
-        std::cout << "Enter first name and surname for person " << i + 1 << ": ";
-        std::cin >> firstName >> surname;
+        double score;
+        std::vector<double> homeworkScores;
 
+        // Read first name and surname
+        iss >> firstName >> surname;
+
+        // Read homework scores
+        for (int i = 0; i < 5; ++i) { // Adjust the number of homework scores as needed
+            iss >> score;
+            homeworkScores.push_back(score);
+        }
+
+        // Read exam score
+        double examScore;
+        iss >> examScore;
+
+        // Create a Person object and set scores
         Person person(firstName, surname);
-        std::cin >> person;
-
+        person.setScores(homeworkScores, examScore);
         persons.push_back(person);
     }
+
+    infile.close(); // Close the file after reading
 
     char choice;
     std::cout << "Calculate final grade using (A)verage or (M)edian of homework scores? (A/M): ";
