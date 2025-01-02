@@ -1,0 +1,8 @@
+Name12 Surname2 - Final Grade: 8.68677
+Name1 Surname1 - Final Grade: 7.78642
+Name9 Surname1 - Final Grade: 7.65087
+Name7 Surname1 - Final Grade: 7.09418
+Name8 Surname2 - Final Grade: 7.01611
+Name4 Surname2 - Final Grade: 6.78077
+Name3 Surname1 - Final Grade: 6.57589
+Name10 Surname2 - Final Grade: 5.78891

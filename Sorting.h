@@ -1,3 +1,5 @@
+
+
 #ifndef SORTING_H
 #define SORTING_H
 
@@ -6,7 +8,7 @@
 #include <deque>
 #include "Student.h"
 
-class Sorting
+    class Sorting
 {
 public:
     static void sortStudents(std::vector<Student> &students);

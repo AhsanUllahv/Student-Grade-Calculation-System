@@ -1,10 +1,16 @@
+
+
 #include "FileManager.h"
 #include <fstream>
 #include <sstream>
 #include <random>
 #include <iostream>
 #include <stdexcept>
+#include "Student.h"
+#include <algorithm>
+#include <typeinfo>
 
+// Function to generate a list of random students and write to file
 void FileManager::generateRandomStudentList(int numStudents, const std::string &filename)
 {
     std::ofstream outFile(filename);
@@ -25,6 +31,7 @@ void FileManager::generateRandomStudentList(int numStudents, const std::string &
     }
 }
 
+// Function to read student data from file and populate a vector
 void FileManager::readStudentDataFromFile(const std::string &filename, std::vector<Student> &students)
 {
     std::ifstream inFile(filename);
@@ -51,21 +58,13 @@ void FileManager::readStudentDataFromFile(const std::string &filename, std::vect
         }
         iss >> score; // Exam score
 
-        // Remove debugging print statements
-        // std::cout << "First Name: " << firstName << ", Surname: " << surname << "\n";
-        // std::cout << "Scores: ";
-        // for (const auto &hwScore : homeworkScores)
-        // {
-        //     std::cout << hwScore << " ";
-        // }
-        // std::cout << "Exam: " << score << std::endl;
-
         Student student(firstName, surname);
         student.setScores(homeworkScores, score);
         students.push_back(student);
     }
 }
 
+// Function to read student data from file and populate a list
 void FileManager::readStudentDataFromFile(const std::string &filename, std::list<Student> &students)
 {
     std::ifstream inFile(filename);
@@ -98,6 +97,7 @@ void FileManager::readStudentDataFromFile(const std::string &filename, std::list
     }
 }
 
+// Function to read student data from file and populate a deque
 void FileManager::readStudentDataFromFile(const std::string &filename, std::deque<Student> &students)
 {
     std::ifstream inFile(filename);
@@ -130,100 +130,203 @@ void FileManager::readStudentDataFromFile(const std::string &filename, std::dequ
     }
 }
 
-void FileManager::writeStudentDataToFile(const std::vector<Student> &students, const std::string &filename)
-{
-    std::ofstream outFile(filename);
-    outFile << "Name Surname FinalGrade\n";
-    for (const auto &student : students)
-    {
-        outFile << student << "\n"; // Ensure the output stream is correctly formatted
-    }
-}
-
+// Function to write student data to file (for list)
 void FileManager::writeStudentDataToFile(const std::list<Student> &students, const std::string &filename)
 {
     std::ofstream outFile(filename);
     if (!outFile)
     {
-        throw std::runtime_error("Unable to open file: " + filename);
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return;
     }
-
-    outFile << "FirstName    LastName       FinalGrade\n";
+    outFile << "Name Surname FinalGrade\n";
     for (const auto &student : students)
     {
-        outFile << student << "\n";
+        outFile << student.getFullName() << " " << student.getFinalGrade() << "\n";
+    }
+    outFile.close();
+}
+
+// Function to write student data to file (for vector)
+void FileManager::writeStudentDataToFile(const std::vector<Student> &students, const std::string &filename)
+{
+    std::ofstream outFile(filename);
+
+    if (!outFile) // Check if the file opened successfully
+    {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return;
+    }
+
+    // Write the header to the file
+    outFile << "Name Surname FinalGrade\n";
+
+    // Write each student's data to the file in the same format as the list
+    for (const auto &student : students)
+    {
+        outFile << student.getFullName() << " " << student.getFinalGrade() << "\n";
+    }
+
+    outFile.close(); // Explicitly close the file
+
+    // Check if there was an error closing the file
+    if (outFile.fail())
+    {
+        std::cerr << "Error closing file: " << filename << std::endl;
+    }
+    else
+    {
+        std::cout << "File written successfully!" << std::endl;
     }
 }
 
+// Function to write student data to file (for deque)
 void FileManager::writeStudentDataToFile(const std::deque<Student> &students, const std::string &filename)
 {
     std::ofstream outFile(filename);
-    if (!outFile)
-    {
-        throw std::runtime_error("Unable to open file: " + filename);
-    }
-
-    outFile << "FirstName    LastName       FinalGrade\n";
+    outFile << "Name Surname FinalGrade\n";
     for (const auto &student : students)
     {
-        outFile << student << "\n";
+        outFile << student.getFullName() << " " << student.getFinalGrade() << "\n"; // Ensure the output stream is formatted
     }
 }
-
-void FileManager::splitStudentsByGrade(const std::vector<Student> &students, const std::string &passedFile, const std::string &failedFile)
+// Function to split students into passed and failed containers
+template <typename T>
+void FileManager::splitStudentsIntoTwoContainers(const T &students, T &passed, T &failed, const std::string &passedFile, const std::string &failedFile)
 {
-    std::vector<Student> passed, failed;
     for (const auto &student : students)
     {
-        if (student.getFinalGrade() >= 5.0)
-        {
+        double finalGrade = student.getFinalGrade();
+
+        if (finalGrade >= 5.0) // Assuming 5.0 as the passing grade threshold
             passed.push_back(student);
-        }
         else
-        {
             failed.push_back(student);
-        }
     }
+
+    // Write to file for passed and failed students
     writeStudentDataToFile(passed, passedFile);
     writeStudentDataToFile(failed, failedFile);
 }
 
-void FileManager::splitStudentsByGrade(const std::list<Student> &students, const std::string &passedFile, const std::string &failedFile)
+bool hasPassed(const Student &student)
 {
-    std::list<Student> passedStudents, failedStudents;
+    return student.getFinalGrade() >= 5.0; // Pass if final grade >= 5.0
+}
 
-    for (const auto &student : students)
+// Template function to move students to passed or failed containers
+// Function to move students to passed or failed containers and sort the students
+template <class T>
+void FileManager::moveStudentsToPassedOrFailed(T &students, T &passed, T &failed)
+{
+    // Assume the passing grade is 5.0 (or any other threshold value)
+    double passingGrade = 5.0;
+
+    // Move students based on their final grade
+    for (auto it = students.begin(); it != students.end();)
     {
-        if (student.getFinalGrade() >= 5.0)
+        if (it->getFinalGrade() >= passingGrade)
         {
-            passedStudents.push_back(student);
+            passed.push_back(*it);   // Move passed student to 'passed' container
+            it = students.erase(it); // Remove from original container
         }
         else
         {
-            failedStudents.push_back(student);
+            failed.push_back(*it);   // Move failed student to 'failed' container
+            it = students.erase(it); // Remove from original container
         }
     }
 
-    writeStudentDataToFile(passedStudents, passedFile);
-    writeStudentDataToFile(failedStudents, failedFile);
+    // Now we need to write the results into separate files
+    writeResultsToFile(passed, failed, students); // Write the passed, failed, and sorted students
 }
 
-void FileManager::splitStudentsByGrade(const std::deque<Student> &students, const std::string &passedFile, const std::string &failedFile)
+// Modified function to write student data to file for passed, failed, and sorted students
+
+template <class T>
+void FileManager::writeResultsToFile(const T &passed, const T &failed, const T &sorted)
 {
-    std::deque<Student> passedStudents, failedStudents;
+    // Define the container type (list, vector, deque)
+    std::string containerType;
 
-    for (const auto &student : students)
+    if (typeid(T) == typeid(std::list<Student>))
     {
-        if (student.getFinalGrade() >= 5.0)
-        {
-            passedStudents.push_back(student);
-        }
-        else
-        {
-            failedStudents.push_back(student);
-        }
+        containerType = "list";
+    }
+    else if (typeid(T) == typeid(std::vector<Student>))
+    {
+        containerType = "vector";
+    }
+    else if (typeid(T) == typeid(std::deque<Student>))
+    {
+        containerType = "deque";
+    }
+    else
+    {
+        containerType = "unknown";
     }
 
-    writeStudentDataToFile(passedStudents, passedFile);
-    writeStudentDataToFile(failedStudents, failedFile);
+    // Define file names based on the container type
+    std::string passedFileName = "S2_Pass_Student_" + containerType + ".txt";
+    std::string failedFileName = "S2_Fail_Student_" + containerType + ".txt";
+    std::string sortedFileName = "S2_Sorted_Student_" + containerType + ".txt";
+
+    // Write passed students to the corresponding file
+    std::ofstream passedFile(passedFileName);
+    if (passedFile.is_open())
+    {
+        for (const auto &student : passed)
+        {
+            passedFile << student << std::endl; // Write passed students to file
+        }
+        passedFile.close();
+    }
+
+    // Write failed students to the corresponding file
+    std::ofstream failedFile(failedFileName);
+    if (failedFile.is_open())
+    {
+        for (const auto &student : failed)
+        {
+            failedFile << student << std::endl; // Write failed students to file
+        }
+        failedFile.close();
+    }
+
+    // Combine passed and failed students into a single container for sorting
+    std::vector<Student> allStudents;
+    allStudents.insert(allStudents.end(), passed.begin(), passed.end());
+    allStudents.insert(allStudents.end(), failed.begin(), failed.end());
+
+    // Sort the students by final grade in descending order
+    std::sort(allStudents.begin(), allStudents.end(), [](const Student &a, const Student &b)
+              {
+                  return a.getFinalGrade() > b.getFinalGrade(); // Sort by final grade (descending order)
+              });
+
+    // Write sorted students to the corresponding file
+    std::ofstream sortedFile(sortedFileName);
+    if (sortedFile.is_open())
+    {
+        for (const auto &student : allStudents)
+        {
+            sortedFile << student << std::endl; // Write all students to sorted file
+        }
+        sortedFile.close();
+    }
 }
+
+// Explicit template instantiations for vector, list, deque
+template void FileManager::writeResultsToFile<std::vector<Student>>(const std::vector<Student> &, const std::vector<Student> &, const std::vector<Student> &);
+template void FileManager::writeResultsToFile<std::list<Student>>(const std::list<Student> &, const std::list<Student> &, const std::list<Student> &);
+template void FileManager::writeResultsToFile<std::deque<Student>>(const std::deque<Student> &, const std::deque<Student> &, const std::deque<Student> &);
+
+// Explicit instantiations for different containers
+template void FileManager::moveStudentsToPassedOrFailed<std::vector<Student>>(std::vector<Student> &, std::vector<Student> &, std::vector<Student> &);
+template void FileManager::moveStudentsToPassedOrFailed<std::list<Student>>(std::list<Student> &, std::list<Student> &, std::list<Student> &);
+template void FileManager::moveStudentsToPassedOrFailed<std::deque<Student>>(std::deque<Student> &, std::deque<Student> &, std::deque<Student> &);
+
+// Explicit template instantiation for different container types
+template void FileManager::splitStudentsIntoTwoContainers<std::vector<Student>>(const std::vector<Student> &students, std::vector<Student> &passed, std::vector<Student> &failed, const std::string &passedFile, const std::string &failedFile);
+template void FileManager::splitStudentsIntoTwoContainers<std::list<Student>>(const std::list<Student> &students, std::list<Student> &passed, std::list<Student> &failed, const std::string &passedFile, const std::string &failedFile);
+template void FileManager::splitStudentsIntoTwoContainers<std::deque<Student>>(const std::deque<Student> &students, std::deque<Student> &passed, std::deque<Student> &failed, const std::string &passedFile, const std::string &failedFile);
