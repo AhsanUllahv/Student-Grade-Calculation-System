@@ -3,6 +3,7 @@
 #include <sstream>
 #include <random>
 #include <iostream>
+#include <stdexcept>
 
 void FileManager::generateRandomStudentList(int numStudents, const std::string &filename)
 {
@@ -65,6 +66,70 @@ void FileManager::readStudentDataFromFile(const std::string &filename, std::vect
     }
 }
 
+void FileManager::readStudentDataFromFile(const std::string &filename, std::list<Student> &students)
+{
+    std::ifstream inFile(filename);
+    if (!inFile)
+    {
+        throw std::runtime_error("Unable to open file: " + filename);
+    }
+
+    std::string line;
+    std::getline(inFile, line); // Skip header
+
+    while (std::getline(inFile, line))
+    {
+        std::istringstream iss(line);
+        std::string firstName, surname;
+        double score;
+        std::vector<double> homeworkScores;
+
+        iss >> firstName >> surname;
+        for (int i = 0; i < 7; ++i)
+        {
+            iss >> score;
+            homeworkScores.push_back(score);
+        }
+        iss >> score; // Exam score
+
+        Student student(firstName, surname);
+        student.setScores(homeworkScores, score);
+        students.push_back(student);
+    }
+}
+
+void FileManager::readStudentDataFromFile(const std::string &filename, std::deque<Student> &students)
+{
+    std::ifstream inFile(filename);
+    if (!inFile)
+    {
+        throw std::runtime_error("Unable to open file: " + filename);
+    }
+
+    std::string line;
+    std::getline(inFile, line); // Skip header
+
+    while (std::getline(inFile, line))
+    {
+        std::istringstream iss(line);
+        std::string firstName, surname;
+        double score;
+        std::vector<double> homeworkScores;
+
+        iss >> firstName >> surname;
+        for (int i = 0; i < 7; ++i)
+        {
+            iss >> score;
+            homeworkScores.push_back(score);
+        }
+        iss >> score; // Exam score
+
+        Student student(firstName, surname);
+        student.setScores(homeworkScores, score);
+        students.push_back(student);
+    }
+}
+
 void FileManager::writeStudentDataToFile(const std::vector<Student> &students, const std::string &filename)
 {
     std::ofstream outFile(filename);
@@ -72,6 +137,36 @@ void FileManager::writeStudentDataToFile(const std::vector<Student> &students, c
     for (const auto &student : students)
     {
         outFile << student << "\n"; // Ensure the output stream is correctly formatted
+    }
+}
+
+void FileManager::writeStudentDataToFile(const std::list<Student> &students, const std::string &filename)
+{
+    std::ofstream outFile(filename);
+    if (!outFile)
+    {
+        throw std::runtime_error("Unable to open file: " + filename);
+    }
+
+    outFile << "FirstName    LastName       FinalGrade\n";
+    for (const auto &student : students)
+    {
+        outFile << student << "\n";
+    }
+}
+
+void FileManager::writeStudentDataToFile(const std::deque<Student> &students, const std::string &filename)
+{
+    std::ofstream outFile(filename);
+    if (!outFile)
+    {
+        throw std::runtime_error("Unable to open file: " + filename);
+    }
+
+    outFile << "FirstName    LastName       FinalGrade\n";
+    for (const auto &student : students)
+    {
+        outFile << student << "\n";
     }
 }
 
@@ -91,4 +186,44 @@ void FileManager::splitStudentsByGrade(const std::vector<Student> &students, con
     }
     writeStudentDataToFile(passed, passedFile);
     writeStudentDataToFile(failed, failedFile);
+}
+
+void FileManager::splitStudentsByGrade(const std::list<Student> &students, const std::string &passedFile, const std::string &failedFile)
+{
+    std::list<Student> passedStudents, failedStudents;
+
+    for (const auto &student : students)
+    {
+        if (student.getFinalGrade() >= 5.0)
+        {
+            passedStudents.push_back(student);
+        }
+        else
+        {
+            failedStudents.push_back(student);
+        }
+    }
+
+    writeStudentDataToFile(passedStudents, passedFile);
+    writeStudentDataToFile(failedStudents, failedFile);
+}
+
+void FileManager::splitStudentsByGrade(const std::deque<Student> &students, const std::string &passedFile, const std::string &failedFile)
+{
+    std::deque<Student> passedStudents, failedStudents;
+
+    for (const auto &student : students)
+    {
+        if (student.getFinalGrade() >= 5.0)
+        {
+            passedStudents.push_back(student);
+        }
+        else
+        {
+            failedStudents.push_back(student);
+        }
+    }
+
+    writeStudentDataToFile(passedStudents, passedFile);
+    writeStudentDataToFile(failedStudents, failedFile);
 }

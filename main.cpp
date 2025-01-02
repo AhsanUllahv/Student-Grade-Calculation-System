@@ -41,49 +41,131 @@ int main()
                 std::string filename;
                 std::cout << "Enter the filename to read from: ";
                 std::cin >> filename;
-                std::vector<Student> students;
 
-                Timer timer; // Start the timer for the entire operation
-                timer.startTimer();
+                int containerChoice;
+                std::cout << "Select container:\n1. List\n2. Deque\n3. Vector\nEnter your choice: ";
+                std::cin >> containerChoice;
 
-                // Measure time for reading data
-                std::cout << "Reading data from file...\n";
-                FileManager::readStudentDataFromFile(filename, students);
-                double readTime = timer.stopTimer(); // Stop and get elapsed time
-                std::cout << "Reading data took " << readTime << " seconds.\n";
+                Timer timer;
+                double readTime = 0.0, sortTime = 0.0, splitTime = 0.0, writeTime = 0.0;
 
-                // Calculate final grade for each student
-                char choice;
-                std::cout << "Calculate final grade using (A)verage or (M)edian? ";
-                std::cin >> choice;
-                bool useAverage = (choice == 'A' || choice == 'a');
-
-                for (auto &student : students)
+                if (containerChoice == 1) // List
                 {
-                    student.calculateFinalGrade(useAverage);
+                    std::list<Student> students;
+
+                    // Reading data
+                    timer.startTimer();
+                    FileManager::readStudentDataFromFile(filename, students);
+                    readTime = timer.stopTimer();
+                    std::cout << "Data reading took " << readTime << " seconds.\n";
+
+                    // Calculating final grade
+                    char gradeChoice;
+                    std::cout << "Calculate final grade using (A)verage or (M)edian? ";
+                    std::cin >> gradeChoice;
+                    bool useAverage = (gradeChoice == 'A' || gradeChoice == 'a');
+                    for (auto &student : students)
+                    {
+                        student.calculateFinalGrade(useAverage);
+                    }
+
+                    // Sorting data
+                    timer.startTimer();
+                    Sorting::sortStudents(students);
+                    sortTime = timer.stopTimer();
+                    std::cout << "Data sorting took " << sortTime << " seconds.\n";
+
+                    // Splitting data
+                    timer.startTimer();
+                    FileManager::splitStudentsByGrade(students, "passed_list.txt", "failed_list.txt");
+                    splitTime = timer.stopTimer();
+                    std::cout << "Data splitting took " << splitTime << " seconds.\n";
+
+                    // Writing data
+                    timer.startTimer();
+                    FileManager::writeStudentDataToFile(students, "sorted_students_list.txt");
+                    writeTime = timer.stopTimer();
+                    std::cout << "Writing data took " << writeTime << " seconds.\n";
+                }
+                else if (containerChoice == 2) // Deque
+                {
+                    std::deque<Student> students;
+
+                    // Reading data
+                    timer.startTimer();
+                    FileManager::readStudentDataFromFile(filename, students);
+                    readTime = timer.stopTimer();
+                    std::cout << "Data reading took " << readTime << " seconds.\n";
+
+                    // Calculating final grade
+                    char gradeChoice;
+                    std::cout << "Calculate final grade using (A)verage or (M)edian? ";
+                    std::cin >> gradeChoice;
+                    bool useAverage = (gradeChoice == 'A' || gradeChoice == 'a');
+                    for (auto &student : students)
+                    {
+                        student.calculateFinalGrade(useAverage);
+                    }
+
+                    // Sorting data
+                    timer.startTimer();
+                    Sorting::sortStudents(students);
+                    sortTime = timer.stopTimer();
+                    std::cout << "Data sorting took " << sortTime << " seconds.\n";
+
+                    // Splitting data
+                    timer.startTimer();
+                    FileManager::splitStudentsByGrade(students, "passed_deque.txt", "failed_deque.txt");
+                    splitTime = timer.stopTimer();
+                    std::cout << "Data splitting took " << splitTime << " seconds.\n";
+
+                    // Writing data
+                    timer.startTimer();
+                    FileManager::writeStudentDataToFile(students, "sorted_students_deque.txt");
+                    writeTime = timer.stopTimer();
+                    std::cout << "Writing data took " << writeTime << " seconds.\n";
+                }
+                else // Vector
+                {
+                    std::vector<Student> students;
+
+                    // Reading data
+                    timer.startTimer();
+                    FileManager::readStudentDataFromFile(filename, students);
+                    readTime = timer.stopTimer();
+                    std::cout << "Data reading took " << readTime << " seconds.\n";
+
+                    // Calculating final grade
+                    char gradeChoice;
+                    std::cout << "Calculate final grade using (A)verage or (M)edian? ";
+                    std::cin >> gradeChoice;
+                    bool useAverage = (gradeChoice == 'A' || gradeChoice == 'a');
+                    for (auto &student : students)
+                    {
+                        student.calculateFinalGrade(useAverage);
+                    }
+
+                    // Sorting data
+                    timer.startTimer();
+                    Sorting::sortStudents(students);
+                    sortTime = timer.stopTimer();
+                    std::cout << "Data sorting took " << sortTime << " seconds.\n";
+
+                    // Splitting data
+                    timer.startTimer();
+                    FileManager::splitStudentsByGrade(students, "passed_vector.txt", "failed_vector.txt");
+                    splitTime = timer.stopTimer();
+                    std::cout << "Data splitting took " << splitTime << " seconds.\n";
+
+                    // Writing data
+                    timer.startTimer();
+                    FileManager::writeStudentDataToFile(students, "sorted_students_vector.txt");
+                    writeTime = timer.stopTimer();
+                    std::cout << "Writing data took " << writeTime << " seconds.\n";
                 }
 
-                timer.startTimer(); // Restart timer for sorting phase
-                std::cout << "Sorting students...\n";
-                Sorting::sortStudents(students);
-                double sortTime = timer.stopTimer(); // Stop and get elapsed time
-                std::cout << "Sorting took " << sortTime << " seconds.\n";
-
-                timer.startTimer(); // Restart timer for splitting phase
-                std::cout << "Splitting students into passed and failed...\n";
-                FileManager::splitStudentsByGrade(students, "passed.txt", "failed.txt");
-                double splitTime = timer.stopTimer(); // Stop and get elapsed time
-                std::cout << "Splitting students took " << splitTime << " seconds.\n";
-
-                timer.startTimer(); // Restart timer for writing output
-                std::cout << "Writing sorted students to files...\n";
-                FileManager::writeStudentDataToFile(students, "sorted_students.txt");
-                double writeTime = timer.stopTimer(); // Stop and get elapsed time
-                std::cout << "Writing to file took " << writeTime << " seconds.\n";
-
-                // Total time
                 double totalTime = readTime + sortTime + splitTime + writeTime;
-                std::cout << "\nTotal time for sorting and processing: " << totalTime << " seconds.\n";
+                std::cout << "\nTotal time for all operations: " << totalTime << " seconds.\n";
                 break;
             }
 

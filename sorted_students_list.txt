@@ -1,0 +1,13 @@
+FirstName    LastName       FinalGrade
+    Name12       Surname2           8.69
+     Name1       Surname1           7.79
+     Name9       Surname1           7.65
+     Name7       Surname1           7.09
+     Name8       Surname2           7.02
+     Name4       Surname2           6.78
+     Name3       Surname1           6.58
+    Name10       Surname2           5.79
+     Name6       Surname2           4.55
+     Name2       Surname2           4.23
+    Name11       Surname1           3.43
+     Name5       Surname1           3.02
